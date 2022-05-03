@@ -1,5 +1,7 @@
 # Skewheap
 
+![tests](https://github.com/sysread/elixer-skewheap/workflows/Elixir%20CI/badge.svg)
+
 Skewheaps are a fun, weird, priority queue that self-balances over time. Their
 structural depth is not guaranteed and individual operations may vary in
 performance. That said, its _amortized_ performance is roughly O(log n)
