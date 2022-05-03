@@ -7,7 +7,9 @@ defmodule Skewheap.MixProject do
       version:         "0.1.0",
       elixir:          "~> 1.13",
       start_permanent: Mix.env() == :prod,
-      deps:            deps()
+      deps:            deps(),
+      package:         package(),
+      description:     description(),
     ]
   end
 
@@ -24,6 +26,7 @@ defmodule Skewheap.MixProject do
 
   def package do
     [
+      name:        "skewheap",
       maintainers: ["Jeff Ober <sysread@fastmail.fm>"],
       licenses:    ["MIT"],
       links:       %{
