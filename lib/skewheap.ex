@@ -14,12 +14,12 @@ defmodule Skewheap do
   ## Examples
 
       iex> 1..10 |> Enum.shuffle() |> Enum.into(Skewheap.new()) |> Skewheap.drain()
-      {%Skewheap{root: nil, size: 0}, [1,2,3,4,5,6,7,8,9,10]}
+      {%Skewheap{root: nil, size: 0, sorter: &:erlang."=<"/2}, [1,2,3,4,5,6,7,8,9,10]}
 
       iex> a = 1..3 |> Enum.shuffle() |> Enum.into(Skewheap.new())
       iex> b = 4..6 |> Enum.shuffle() |> Enum.into(Skewheap.new())
       iex> Skewheap.merge(a, b) |> Skewheap.drain()
-      {%Skewheap{root: nil, size: 0}, [1,2,3,4,5,6]}
+      {%Skewheap{root: nil, size: 0, sorter: &:erlang."=<"/2}, [1,2,3,4,5,6]}
 
   """
 
@@ -34,23 +34,34 @@ defmodule Skewheap do
       right:   node,
     }
 
+    @type sorter :: (any(), any() -> boolean())
+
     @spec new(any(), node, node) :: skewnode
     def new(p, l \\ nil, r \\ nil), do: %Node{payload: p, left: l, right: r}
 
-    @spec merge(skewnode, skewnode) :: skewnode
-    def merge(a, b) when is_nil(a) and is_nil(b), do: nil
-    def merge(a, b) when is_nil(a),               do: b
-    def merge(a, b) when is_nil(b),               do: a
-    def merge(a, b) when a.payload > b.payload,   do: merge(b, a)
-    def merge(a, b),                              do: %Node{payload: a.payload, left: merge(b, a.right), right: a.left}
+    @spec merge(sorter, skewnode, skewnode) :: skewnode
+    def merge(_, a, b) when is_nil(a) and is_nil(b), do: nil
+    def merge(_, a, b) when is_nil(a),               do: b
+    def merge(_, a, b) when is_nil(b),               do: a
+
+    def merge(lte, a, b) do
+      if lte.(a.payload, b.payload) do
+        %Node{payload: a.payload, left: merge(lte, b, a.right), right: a.left}
+      else
+        merge(lte, b, a)
+      end
+    end
   end
 
 
-  defstruct size: 0, root: nil
+  defstruct size: 0, root: nil, sorter: nil
+
+  @type sorter :: (any(), any() -> boolean())
 
   @type skewheap :: %Skewheap{
-    size: non_neg_integer(),
-    root: Node.skewnode,
+    size:   non_neg_integer(),
+    root:   Node.skewnode,
+    sorter: sorter,
   }
 
   @doc """
@@ -59,10 +70,15 @@ defmodule Skewheap do
   ## Examples
 
       iex> Skewheap.new()
-      %Skewheap{size: 0, root: nil}
+      %Skewheap{size: 0, root: nil, sorter: &:erlang."=<"/2}
   """
   @spec new() :: skewheap
-  def new(), do: %Skewheap{}
+  def new(), do: %Skewheap{sorter: &<=/2}
+
+  @spec new(sorter) :: skewheap
+  def new(sorter), do: %Skewheap{sorter: sorter}
+
+  defp merge_nodes(skew, a, b), do: Node.merge(skew.sorter, a, b)
 
   @doc """
   True when the Skewheap has no items in it.
@@ -115,11 +131,24 @@ defmodule Skewheap do
       iex> s = Skewheap.new()
       iex> s = Skewheap.put(s, 42)
       iex> Skewheap.put(s, "fnord")
-      %Skewheap{size: 2, root: %Skewheap.Node{left: %Skewheap.Node{left: nil, payload: "fnord", right: nil}, payload: 42, right: nil}}
+      %Skewheap{size: 2, sorter: &:erlang."=<"/2, root: %Skewheap.Node{left: %Skewheap.Node{left: nil, payload: "fnord", right: nil}, payload: 42, right: nil}}
   """
   @spec put(skewheap, any()) :: skewheap
-  def put(skew, payload) when empty?(skew), do: %Skewheap{size: 1, root: Node.new(payload)}
-  def put(skew, payload), do: %Skewheap{size: skew.size + 1, root: Node.merge(skew.root, Node.new(payload))}
+  def put(skew, payload) when empty?(skew) do
+    %Skewheap{
+      size:   1,
+      root:   Node.new(payload),
+      sorter: skew.sorter,
+    }
+  end
+
+  def put(skew, payload) do
+    %Skewheap{
+      size:   skew.size + 1,
+      root:   merge_nodes(skew, skew.root, Node.new(payload)),
+      sorter: skew.sorter
+    }
+  end
 
   @doc """
   Retrieves the top element from the heap or nil if empty.
@@ -127,13 +156,20 @@ defmodule Skewheap do
   ## Examples
 
       iex> [1,2,3] |> Enum.shuffle() |> Enum.into(Skewheap.new()) |> Skewheap.take()
-      {%Skewheap{root: %Skewheap.Node{left: %Skewheap.Node{left: nil, payload: 3, right: nil}, payload: 2, right: nil}, size: 2}, 1}
+      {%Skewheap{size: 2, sorter: &:erlang."=<"/2, root: %Skewheap.Node{left: %Skewheap.Node{left: nil, payload: 3, right: nil}, payload: 2, right: nil}}, 1}
   """
   @spec take(skewheap) :: {skewheap, any()}
   def take(skew) when empty?(skew), do: {skew, nil}
   def take(skew) do
     %Node{:payload => payload} = skew.root
-    {%Skewheap{size: skew.size - 1, root: Node.merge(skew.root.left, skew.root.right)}, payload}
+    {
+      %Skewheap{
+        size:   skew.size - 1,
+        root:   merge_nodes(skew, skew.root.left, skew.root.right),
+        sorter: skew.sorter,
+      },
+      payload,
+    }
   end
 
   @doc """
@@ -142,7 +178,7 @@ defmodule Skewheap do
   ## Examples
 
       iex> 1..10 |> Enum.shuffle() |> Enum.into(Skewheap.new()) |> Skewheap.drain()
-      {%Skewheap{root: nil, size: 0}, [1,2,3,4,5,6,7,8,9,10]}
+      {%Skewheap{root: nil, size: 0, sorter: &:erlang."=<"/2}, [1,2,3,4,5,6,7,8,9,10]}
   """
   @spec drain(skewheap) :: {skewheap, [any()]}
   def drain(skew) when empty?(skew), do: {skew, []}
@@ -160,13 +196,14 @@ defmodule Skewheap do
       iex> a = 1..3 |> Enum.shuffle() |> Enum.into(Skewheap.new())
       iex> b = 4..6 |> Enum.shuffle() |> Enum.into(Skewheap.new())
       iex> Skewheap.merge(a, b) |> Skewheap.drain()
-      {%Skewheap{root: nil, size: 0}, [1,2,3,4,5,6]}
+      {%Skewheap{root: nil, size: 0, sorter: &:erlang."=<"/2}, [1,2,3,4,5,6]}
   """
   @spec merge(skewheap, skewheap) :: skewheap
   def merge(a, b) do
     %Skewheap{
-      size: a.size + b.size,
-      root: Node.merge(a.root, b.root),
+      size:   a.size + b.size,
+      root:   merge_nodes(a, a.root, b.root),
+      sorter: a.sorter,
     }
   end
 end
