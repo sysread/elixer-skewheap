@@ -1,21 +1,29 @@
 # Skewheap
 
-**TODO: Add description**
+Skewheaps are a fun, weird, priority queue that self-balances over time. Their
+structural depth is not guaranteed and individual operations may vary in
+performance. That said, its _amortized_ performance is roughly O(log n)
+([source](https://en.wikipedia.org/wiki/Skew_heap)).
+
+Skewheaps' most interesting characteristic is that they can be _very_ quickly
+merged together non-destructively, creating a new, balanced heap containing all
+elements of the source heaps.
+
+See [Skew_heap](https://en.wikipedia.org/wiki/Skew_heap) on Wikipedia.
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `skewheap` to your list of dependencies in `mix.exs`:
-
+1. Add to your project's dependencies
 ```elixir
 def deps do
-  [
-    {:skewheap, "~> 0.1.0"}
-  ]
+  [{:skewheap, "~> 0.1.0"}]
 end
 ```
+2. Install
+```
+$ mix deps.get
+```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/skewheap>.
+## Documentation
 
+API documentation available on <https://hexdocs.pm/skewheap>.

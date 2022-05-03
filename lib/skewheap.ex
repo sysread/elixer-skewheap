@@ -2,7 +2,7 @@ defmodule Skewheap do
   @moduledoc """
   Skewheap - a mergable priority queue
 
-  Skewheaps are a weird sort of priority queue that self-balances over time.
+  Skewheaps are a fun, weird, priority queue that self-balances over time.
   Their structural depth is not guaranteed and individual operations may vary
   in performance. That said, its _amortized_ performance is roughly O(log n)
   ([source](https://en.wikipedia.org/wiki/Skew_heap)).
