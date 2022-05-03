@@ -4,7 +4,7 @@ defmodule Skewheap.MixProject do
   def project do
     [
       app:             :skewheap,
-      version:         "0.1.0",
+      version:         "0.1.1",
       elixir:          "~> 1.13",
       start_permanent: Mix.env() == :prod,
       deps:            deps(),
@@ -21,7 +21,7 @@ defmodule Skewheap.MixProject do
   end
 
   def description do
-    "A skewheap is a fun, weird, priority queue that self-balance over time."
+    "Skewheaps are fun, weird, priority queues that self-balance over time."
   end
 
   def package do
