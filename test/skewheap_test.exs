@@ -1,3 +1,8 @@
+defmodule SkewheapDocTest do
+  use ExUnit.Case
+  doctest Skewheap
+end
+
 defmodule SkewheapTest do
   use ExUnit.Case
   doctest Skewheap
