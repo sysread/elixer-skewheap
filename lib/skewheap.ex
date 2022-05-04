@@ -117,6 +117,7 @@ defmodule Skewheap do
   def peek(skew), do: payload(skew.root)
 
   @doc """
+  Fills the heap with a list of items.
 
   ## Examples
 
