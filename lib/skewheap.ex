@@ -13,61 +13,43 @@ defmodule Skewheap do
 
   ## Examples
 
-      iex> 1..10 |> Enum.shuffle() |> Enum.into(Skewheap.new()) |> Skewheap.drain()
-      {%Skewheap{root: :leaf, size: 0, sorter: &:erlang."=<"/2}, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]}
+      iex> {_, items} = 1..10 |> Enum.shuffle() |> Enum.into(Skewheap.new()) |> Skewheap.drain()
+      ...> items
+      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
       iex> a = 1..3 |> Enum.shuffle() |> Enum.into(Skewheap.new())
       ...> b = 4..6 |> Enum.shuffle() |> Enum.into(Skewheap.new())
-      ...> Skewheap.merge(a, b) |> Skewheap.drain()
-      {%Skewheap{root: :leaf, size: 0, sorter: &:erlang."=<"/2}, [1, 2, 3, 4, 5, 6]}
+      ...> {_, items} = Skewheap.merge(a, b) |> Skewheap.drain()
+      ...> items
+      [1, 2, 3, 4, 5, 6]
 
   """
-  @type skewnode :: :leaf | {any(), skewnode, skewnode}
 
-  @spec skewnode(any(), skewnode, skewnode) :: skewnode
-  defp skewnode(p, l \\ :leaf, r \\ :leaf), do: {p, l, r}
-
-  defmacrop leaf?(node) do
-    quote do
-      (unquote node) == :leaf
-    end
-  end
-
-  defmacrop payload(node) do
-    quote do
-      elem((unquote node), 0)
-    end
-  end
-
-  defmacrop left(node) do
-    quote do
-      elem((unquote node), 1)
-    end
-  end
-
-  defmacrop right(node) do
-    quote do
-      elem((unquote node), 2)
-    end
-  end
+  @typep skewnode :: :leaf | {any(), skewnode, skewnode}
+  defmacrop skewnode(p, l \\ :leaf, r \\ :leaf), do: quote do: {unquote(p), unquote(l), unquote(r)}
+  defmacrop payload(node), do: quote do: elem((unquote node), 0)
+  defmacrop left(node),    do: quote do: elem((unquote node), 1)
+  defmacrop right(node),   do: quote do: elem((unquote node), 2)
+  defmacrop leaf?(node),   do: quote do: (unquote node) == :leaf
 
   @spec merge_nodes(skewheap, skewnode, skewnode) :: skewnode
+  defp merge_nodes(_, :leaf, :leaf), do: :leaf
+  defp merge_nodes(_, :leaf, b),     do: b
+  defp merge_nodes(_, a, :leaf),     do: a
   defp merge_nodes(skew, a, b) do
-    cond do
-      leaf?(a) and leaf?(b)                -> :leaf
-      leaf?(a)                             -> b
-      leaf?(b)                             -> a
-      skew.sorter.(payload(b), payload(a)) -> merge_nodes(skew, b, a)
-      true                                 -> skewnode(payload(a), merge_nodes(skew, b, right(a)), left(a))
+    if skew.sorter.(payload(b), payload(a)) do
+      merge_nodes(skew, b, a)
+    else
+      skewnode(payload(a), merge_nodes(skew, b, right(a)), left(a))
     end
   end
 
 
-  defstruct size: 0, root: :leaf, sorter: nil
+  defstruct size: 0, root: :leaf, sorter: &<=/2
 
-  @type sorter :: (any(), any() -> boolean())
+  @typep sorter :: (any(), any() -> boolean())
 
-  @type skewheap :: %Skewheap{
+  @opaque skewheap :: %Skewheap{
     size:   non_neg_integer(),
     root:   skewnode,
     sorter: sorter,
@@ -78,11 +60,12 @@ defmodule Skewheap do
 
   ## Examples
 
-      iex> Skewheap.new()
-      %Skewheap{size: 0, root: :leaf, sorter: &:erlang."=<"/2}
+      iex> s = Skewheap.new()
+      ...> Skewheap.size(s)
+      0
   """
   @spec new() :: skewheap
-  def new(), do: %Skewheap{sorter: &<=/2}
+  def new(), do: %Skewheap{}
 
   @spec new(sorter) :: skewheap
   def new(sorter), do: %Skewheap{sorter: sorter}
@@ -119,16 +102,37 @@ defmodule Skewheap do
   def size(skew), do: skew.size
 
   @doc """
-  Returns the top element of the heap without removing it or nil if empty.
+  Returns the top element of the heap without removing it or `:nothing` if empty.
 
   ## Examples
 
       iex> 1..10 |> Enum.shuffle() |> Enum.into(Skewheap.new()) |> Skewheap.peek()
       1
+
+      iex> Skewheap.new() |> Skewheap.peek()
+      :nothing
   """
   @spec peek(skewheap) :: any()
-  def peek(skew) when empty?(skew), do: nil
+  def peek(skew) when empty?(skew), do: :nothing
   def peek(skew), do: payload(skew.root)
+
+  @doc """
+
+  ## Examples
+
+    iex> {_, items} = Skewheap.fill(Skewheap.new(), 1..5 |> Enum.shuffle()) |> Skewheap.drain()
+    ...> items
+    [1, 2, 3, 4, 5]
+  """
+  def fill(skew, items) do
+    case items do
+      [car | cdr] ->
+        skew = put(skew, car)
+        fill(skew, cdr)
+      [] ->
+        skew
+    end
+  end
 
   @doc """
   Adds a new element to the heap.
@@ -159,16 +163,20 @@ defmodule Skewheap do
   end
 
   @doc """
-  Retrieves the top element from the heap or nil if empty.
+  Retrieves the top element from the heap or `:nothing` if empty.
 
   ## Examples
+
+      iex> {_, v} = Skewheap.new() |> Skewheap.take()
+      ...> v
+      :nothing
 
       iex> {s, v} = [1,2,3] |> Enum.shuffle() |> Enum.into(Skewheap.new()) |> Skewheap.take()
       ...> {v, Skewheap.size(s)}
       {1, 2}
   """
   @spec take(skewheap) :: {skewheap, any()}
-  def take(skew) when empty?(skew), do: {skew, nil}
+  def take(skew) when empty?(skew), do: {skew, :nothing}
   def take(skew) do
     {payload, _, _} = skew.root
     {

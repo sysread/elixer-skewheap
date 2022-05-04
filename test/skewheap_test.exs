@@ -20,7 +20,7 @@ defmodule SkewheapTest do
 
   test "peek" do
     skew = Skewheap.new()
-    assert is_nil(Skewheap.peek(skew))
+    assert Skewheap.peek(skew) == :nothing
 
     skew = Skewheap.put(skew, 5)
     assert Skewheap.peek(skew) == 5

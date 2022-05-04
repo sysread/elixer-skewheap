@@ -15,10 +15,9 @@ defimpl Collectable, for: Skewheap do
   @spec into(Skewheap.skewheap) :: {term(), (term(), Collectable.command() -> Skewheap.skewheap | term())}
   def into(skewheap) do
     {skewheap,
-     fn
-       s, {:cont, v} -> Skewheap.put(s, v)
-       s, :done -> s
-       _, :halt -> :ok
+     fn s, {:cont, v}  -> Skewheap.put(s, v)
+        s, :done       -> s
+        _, :halt       -> :ok
      end}
   end
 end

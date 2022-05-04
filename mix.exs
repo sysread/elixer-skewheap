@@ -4,7 +4,7 @@ defmodule Skewheap.MixProject do
   def project do
     [
       app:             :skewheap,
-      version:         "0.2.0",
+      version:         "0.3.0",
       elixir:          "~> 1.13",
       start_permanent: Mix.env() == :prod,
       deps:            deps(),
@@ -40,6 +40,7 @@ defmodule Skewheap.MixProject do
   defp deps do
     [
       {:ex_doc, "~> 0.27", only: :dev, runtime: false},
+      {:benchee, "~> 1.1.0", only: :dev, runtime: false},
     ]
   end
 end

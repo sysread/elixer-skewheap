@@ -1,3 +1,9 @@
+0.3.0   2022-05-04
+  -added function fill/2
+  -peek/1, take/1 now return :nothing when skewheap is empty (previously returned nil)
+  -refactored, minor performance optimizations
+  -add bin/bench.exs
+
 0.2.0   2022-05-04
   -Add custom sorting
   -Redesign internal binary tree structure
