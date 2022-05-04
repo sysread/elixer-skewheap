@@ -38,9 +38,9 @@ defmodule Skewheap do
   defp merge_nodes(_, a, :leaf),     do: a
   defp merge_nodes(skew, a, b) do
     if skew.sorter.(payload(b), payload(a)) do
-      merge_nodes(skew, b, a)
+      merge_nodes skew, b, a
     else
-      skewnode(payload(a), merge_nodes(skew, b, right(a)), left(a))
+      skewnode payload(a), merge_nodes(skew, b, right(a)), left(a)
     end
   end
 
@@ -125,6 +125,7 @@ defmodule Skewheap do
     ...> items
     [1, 2, 3, 4, 5]
   """
+  @spec fill(skewheap, [any()]) :: skewheap
   def fill(skew, items) do
     case items do
       [car | cdr] ->
