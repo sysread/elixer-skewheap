@@ -24,15 +24,27 @@ defmodule Skewheap do
       [1, 2, 3, 4, 5, 6]
 
   """
-
+  #-----------------------------------------------------------------------------
+  # Node type
+  #-----------------------------------------------------------------------------
   @typep skewnode :: :leaf | {any(), skewnode, skewnode}
-  defmacrop skewnode(p, l \\ :leaf, r \\ :leaf), do: quote do: {unquote(p), unquote(l), unquote(r)}
+  defmacrop skewnode(p, l \\ :leaf, r \\ :leaf) do
+    quote do
+      {
+        unquote(p),
+        unquote(l),
+        unquote(r),
+      }
+    end
+  end
+
+  # Accessors and predicates
   defmacrop payload(node), do: quote do: elem((unquote node), 0)
   defmacrop left(node),    do: quote do: elem((unquote node), 1)
   defmacrop right(node),   do: quote do: elem((unquote node), 2)
   defmacrop leaf?(node),   do: quote do: (unquote node) == :leaf
 
-  @spec merge_nodes(skewheap, skewnode, skewnode) :: skewnode
+  @spec merge_nodes(t, skewnode, skewnode) :: skewnode
   defp merge_nodes(_, :leaf, :leaf), do: :leaf
   defp merge_nodes(_, :leaf, b),     do: b
   defp merge_nodes(_, a, :leaf),     do: a
@@ -44,32 +56,22 @@ defmodule Skewheap do
     end
   end
 
-
+  #-----------------------------------------------------------------------------
+  # Skewheap type implementation
+  #-----------------------------------------------------------------------------
   defstruct size: 0, root: :leaf, sorter: &<=/2
 
-  @typep sorter :: (any(), any() -> boolean())
-
-  @opaque skewheap :: %Skewheap{
+  @type t :: %__MODULE__{
     size:   non_neg_integer(),
     root:   skewnode,
     sorter: sorter,
   }
 
-  @doc """
-  Returns a new Skewheap.
+  @typep sorter :: (any(), any() -> boolean())
 
-  ## Examples
-
-      iex> s = Skewheap.new()
-      ...> Skewheap.size(s)
-      0
-  """
-  @spec new() :: skewheap
-  def new(), do: %Skewheap{}
-
-  @spec new(sorter) :: skewheap
-  def new(sorter), do: %Skewheap{sorter: sorter}
-
+  #-----------------------------------------------------------------------------
+  # Skewheap API
+  #-----------------------------------------------------------------------------
   @doc """
   True when the Skewheap has no items in it.
 
@@ -81,11 +83,23 @@ defmodule Skewheap do
       iex> 1..10 |> Enum.shuffle() |> Enum.into(Skewheap.new()) |> Skewheap.empty?()
       false
   """
-  defmacro empty?(skew) do
-    quote do
-      (unquote skew).size == 0
-    end
-  end
+  defmacro empty?(skew), do: quote do: (unquote skew).size == 0
+
+
+  @doc """
+  Returns a new Skewheap.
+
+  ## Examples
+
+      iex> Skewheap.new() |> Skewheap.size()
+      0
+
+      iex> Skewheap.new() |> Skewheap.empty?()
+      true
+  """
+  @spec new(sorter) :: t
+  def new(sorter \\ &<=/2), do: %Skewheap{sorter: sorter}
+
 
   @doc """
   Returns the number of items in the Skewheap.
@@ -98,8 +112,9 @@ defmodule Skewheap do
       iex> 1..10 |> Enum.shuffle() |> Enum.into(Skewheap.new()) |> Skewheap.size()
       10
   """
-  @spec size(skewheap) :: non_neg_integer()
+  @spec size(t) :: non_neg_integer()
   def size(skew), do: skew.size
+
 
   @doc """
   Returns the top element of the heap without removing it or `:nothing` if empty.
@@ -112,9 +127,10 @@ defmodule Skewheap do
       iex> Skewheap.new() |> Skewheap.peek()
       :nothing
   """
-  @spec peek(skewheap) :: any()
+  @spec peek(t) :: any()
   def peek(skew) when empty?(skew), do: :nothing
   def peek(skew), do: payload(skew.root)
+
 
   @doc """
   Fills the heap with a list of items.
@@ -125,7 +141,7 @@ defmodule Skewheap do
     ...> items
     [1, 2, 3, 4, 5]
   """
-  @spec fill(skewheap, [any()]) :: skewheap
+  @spec fill(t, [any()]) :: t
   def fill(skew, items) do
     case items do
       [car | cdr] ->
@@ -135,6 +151,7 @@ defmodule Skewheap do
         skew
     end
   end
+
 
   @doc """
   Adds a new element to the heap.
@@ -147,7 +164,7 @@ defmodule Skewheap do
       ...> Skewheap.peek(s)
       42
   """
-  @spec put(skewheap, any()) :: skewheap
+  @spec put(t, any()) :: t
   def put(skew, payload) when empty?(skew) do
     %Skewheap{
       size:   1,
@@ -164,6 +181,7 @@ defmodule Skewheap do
     }
   end
 
+
   @doc """
   Retrieves the top element from the heap or `:nothing` if empty.
 
@@ -177,7 +195,7 @@ defmodule Skewheap do
       ...> {v, Skewheap.size(s)}
       {1, 2}
   """
-  @spec take(skewheap) :: {skewheap, any()}
+  @spec take(t) :: {t, any()}
   def take(skew) when empty?(skew), do: {skew, :nothing}
   def take(skew) do
     {payload, _, _} = skew.root
@@ -191,6 +209,7 @@ defmodule Skewheap do
     }
   end
 
+
   @doc """
   Removes all elements from the heap and returns them as a list.
 
@@ -200,13 +219,34 @@ defmodule Skewheap do
       ...> items
       [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
   """
-  @spec drain(skewheap) :: {skewheap, [any()]}
-  def drain(skew) when empty?(skew), do: {skew, []}
-  def drain(skew) do
+  @spec drain(t) :: {t, [any()]}
+  def drain(skew), do: drain(skew, size(skew))
+
+
+  @doc """
+  Removes up to `count` elements from the heap and returns them as a list.
+
+  ## Examples
+
+      iex> {_, items} = 1..5 |> Enum.shuffle() |> Enum.into(Skewheap.new()) |> Skewheap.drain(3)
+      ...> items
+      [1, 2, 3]
+
+      iex> {_, items} = 1..5 |> Enum.shuffle() |> Enum.into(Skewheap.new()) |> Skewheap.drain(5)
+      ...> items
+      [1, 2, 3, 4, 5]
+
+  """
+  @spec drain(t, non_neg_integer()) :: {t, [any()]}
+  def drain(skew, count), do: drain(skew, count, [])
+
+  @spec drain(t, non_neg_integer(), [any()]) :: {t, [any()]}
+  def drain(skew, count, acc) when count == 0, do: {skew, Enum.reverse(acc)}
+  def drain(skew, count, acc) do
     {skew, payload} = take(skew)
-    {skew, rest} = drain(skew)
-    {skew, [payload | rest]}
+    drain(skew, count - 1, [payload | acc])
   end
+
 
   @doc """
   Merges two skew heaps into a new heap.
@@ -219,7 +259,7 @@ defmodule Skewheap do
       ...> items
       [1, 2, 3, 4, 5, 6]
   """
-  @spec merge(skewheap, skewheap) :: skewheap
+  @spec merge(t, t) :: t
   def merge(a, b) do
     %Skewheap{
       size:   a.size + b.size,

@@ -1,5 +1,7 @@
 0.4.0   ????-??-??
   -fixed missing documentation for fill/2
+  -design and performance improvements on drain
+  -added drain/2, which specifies the maximum number of desired items to be returned
 
 0.3.0   2022-05-04
   -added function fill/2
