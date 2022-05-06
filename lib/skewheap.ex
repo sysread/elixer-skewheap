@@ -228,6 +228,10 @@ defmodule Skewheap do
 
   ## Examples
 
+      iex> {_skew, items} = 1..5 |> Enum.shuffle() |> Enum.into(Skewheap.new()) |> Skewheap.drain()
+      ...> items
+      [1, 2, 3, 4, 5]
+
       iex> {_skew, items} = 1..5 |> Enum.shuffle() |> Enum.into(Skewheap.new()) |> Skewheap.drain(3)
       ...> items
       [1, 2, 3]
@@ -235,7 +239,6 @@ defmodule Skewheap do
       iex> {_skew, items} = 1..5 |> Enum.shuffle() |> Enum.into(Skewheap.new()) |> Skewheap.drain(5)
       ...> items
       [1, 2, 3, 4, 5]
-
   """
   @spec drain(t, non_neg_integer()) :: {t, [any()]}
   def drain(skew, count), do: drain(skew, count, [])
