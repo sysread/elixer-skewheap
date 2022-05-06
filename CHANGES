@@ -1,3 +1,6 @@
+0.4.1   ????-??-??
+  -minor updates to make the documentation clearer
+
 0.4.0   2022-05-05
   -fixed missing documentation for fill/2
   -design and performance improvements on drain

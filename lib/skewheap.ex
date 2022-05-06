@@ -13,13 +13,13 @@ defmodule Skewheap do
 
   ## Examples
 
-      iex> {_, items} = 1..10 |> Enum.shuffle() |> Enum.into(Skewheap.new()) |> Skewheap.drain()
+      iex> {_skew, items} = 1..10 |> Enum.shuffle() |> Enum.into(Skewheap.new()) |> Skewheap.drain()
       ...> items
       [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
       iex> a = 1..3 |> Enum.shuffle() |> Enum.into(Skewheap.new())
       ...> b = 4..6 |> Enum.shuffle() |> Enum.into(Skewheap.new())
-      ...> {_, items} = Skewheap.merge(a, b) |> Skewheap.drain()
+      ...> {_skew, items} = Skewheap.merge(a, b) |> Skewheap.drain()
       ...> items
       [1, 2, 3, 4, 5, 6]
 
@@ -137,7 +137,7 @@ defmodule Skewheap do
 
   ## Examples
 
-    iex> {_, items} = Skewheap.fill(Skewheap.new(), 1..5 |> Enum.shuffle()) |> Skewheap.drain()
+    iex> {_skew, items} = Skewheap.fill(Skewheap.new(), 1..5 |> Enum.shuffle()) |> Skewheap.drain()
     ...> items
     [1, 2, 3, 4, 5]
   """
@@ -187,7 +187,7 @@ defmodule Skewheap do
 
   ## Examples
 
-      iex> {_, v} = Skewheap.new() |> Skewheap.take()
+      iex> {_skew, v} = Skewheap.new() |> Skewheap.take()
       ...> v
       :nothing
 
@@ -215,7 +215,7 @@ defmodule Skewheap do
 
   ## Examples
 
-      iex> {_, items} = 1..10 |> Enum.shuffle() |> Enum.into(Skewheap.new()) |> Skewheap.drain()
+      iex> {_skew, items} = 1..10 |> Enum.shuffle() |> Enum.into(Skewheap.new()) |> Skewheap.drain()
       ...> items
       [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
   """
@@ -228,11 +228,11 @@ defmodule Skewheap do
 
   ## Examples
 
-      iex> {_, items} = 1..5 |> Enum.shuffle() |> Enum.into(Skewheap.new()) |> Skewheap.drain(3)
+      iex> {_skew, items} = 1..5 |> Enum.shuffle() |> Enum.into(Skewheap.new()) |> Skewheap.drain(3)
       ...> items
       [1, 2, 3]
 
-      iex> {_, items} = 1..5 |> Enum.shuffle() |> Enum.into(Skewheap.new()) |> Skewheap.drain(5)
+      iex> {_skew, items} = 1..5 |> Enum.shuffle() |> Enum.into(Skewheap.new()) |> Skewheap.drain(5)
       ...> items
       [1, 2, 3, 4, 5]
 
@@ -255,7 +255,7 @@ defmodule Skewheap do
 
       iex> a = 1..3 |> Enum.shuffle() |> Enum.into(Skewheap.new())
       ...> b = 4..6 |> Enum.shuffle() |> Enum.into(Skewheap.new())
-      ...> {_, items} = Skewheap.merge(a, b) |> Skewheap.drain()
+      ...> {_skew, items} = Skewheap.merge(a, b) |> Skewheap.drain()
       ...> items
       [1, 2, 3, 4, 5, 6]
   """
