@@ -133,27 +133,6 @@ defmodule Skewheap do
 
 
   @doc """
-  Fills the heap with a list of items.
-
-  ## Examples
-
-    iex> {_skew, items} = Skewheap.fill(Skewheap.new(), 1..5 |> Enum.shuffle()) |> Skewheap.drain()
-    ...> items
-    [1, 2, 3, 4, 5]
-  """
-  @spec fill(t, [any()]) :: t
-  def fill(skew, items) do
-    case items do
-      [car | cdr] ->
-        skew = put(skew, car)
-        fill(skew, cdr)
-      [] ->
-        skew
-    end
-  end
-
-
-  @doc """
   Adds a new element to the heap.
 
   ## Examples
@@ -165,14 +144,6 @@ defmodule Skewheap do
       42
   """
   @spec put(t, any()) :: t
-  def put(skew, payload) when empty?(skew) do
-    %Skewheap{
-      size:   1,
-      root:   skewnode(payload),
-      sorter: skew.sorter,
-    }
-  end
-
   def put(skew, payload) do
     %Skewheap{
       size:   skew.size + 1,
@@ -183,16 +154,30 @@ defmodule Skewheap do
 
 
   @doc """
+  Fills the heap with a list of items.
+
+  ## Examples
+
+    iex> {_skew, items} = Skewheap.fill(Skewheap.new(), 1..5 |> Enum.shuffle()) |> Skewheap.drain()
+    ...> items
+    [1, 2, 3, 4, 5]
+  """
+  @spec fill(t, [any()]) :: t
+  def fill(skew, [car | cdr]), do: fill(put(skew, car), cdr)
+  def fill(skew, _),           do: skew
+
+
+  @doc """
   Retrieves the top element from the heap or `:nothing` if empty.
 
   ## Examples
 
-      iex> {_skew, v} = Skewheap.new() |> Skewheap.take()
-      ...> v
+      iex> {_skew, value} = Skewheap.new() |> Skewheap.take()
+      ...> value
       :nothing
 
-      iex> {s, v} = [1,2,3] |> Enum.shuffle() |> Enum.into(Skewheap.new()) |> Skewheap.take()
-      ...> {v, Skewheap.size(s)}
+      iex> {skew, value} = [1,2,3] |> Enum.shuffle() |> Enum.into(Skewheap.new()) |> Skewheap.take()
+      ...> {value, Skewheap.size(skew)}
       {1, 2}
   """
   @spec take(t) :: {t, any()}
@@ -244,7 +229,10 @@ defmodule Skewheap do
   def drain(skew, count), do: drain(skew, count, [])
 
   @spec drain(t, non_neg_integer(), [any()]) :: {t, [any()]}
-  def drain(skew, count, acc) when count == 0, do: {skew, Enum.reverse(acc)}
+  def drain(skew, 0, acc) do
+    {skew, Enum.reverse(acc)}
+  end
+
   def drain(skew, count, acc) do
     {skew, payload} = take(skew)
     drain(skew, count - 1, [payload | acc])
