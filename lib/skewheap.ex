@@ -183,14 +183,13 @@ defmodule Skewheap do
   @spec take(t) :: {t, any()}
   def take(skew) when empty?(skew), do: {skew, :nothing}
   def take(skew) do
-    {payload, _, _} = skew.root
     {
       %Skewheap{
         size:   skew.size - 1,
         root:   merge_nodes(skew, left(skew.root), right(skew.root)),
         sorter: skew.sorter,
       },
-      payload,
+      payload(skew.root),
     }
   end
 
