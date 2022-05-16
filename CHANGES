@@ -1,5 +1,6 @@
-0.4.1   ????-??-??
-  -minor updates to make the documentation clearer
+0.4.1   2022-05-16
+  -minor updates to make the documentation clearer, especially doctests
+  -minor fixups and to make more readable and idiomatic
 
 0.4.0   2022-05-05
   -fixed missing documentation for fill/2
