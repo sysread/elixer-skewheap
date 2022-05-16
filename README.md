@@ -15,10 +15,10 @@ See [Skew_heap](https://en.wikipedia.org/wiki/Skew_heap) on Wikipedia.
 
 ## Installation
 
-1. Add to your project's dependencies
+1. Add [skewheap](https://hex.pm/packages/skewheap) to your project's dependencies
 ```elixir
 def deps do
-  [{:skewheap, "~> 0.1.0"}]
+  [{:skewheap, "~> 0.4.1"}]
 end
 ```
 2. Install
