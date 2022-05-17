@@ -27,7 +27,7 @@ defmodule Skewheap do
   #-----------------------------------------------------------------------------
   # Node type
   #-----------------------------------------------------------------------------
-  @typep skewnode :: :leaf | {Skewheap.Priority, skewnode, skewnode}
+  @typep skewnode :: :leaf | {any(), skewnode, skewnode}
   defmacrop skewnode(p, l \\ :leaf, r \\ :leaf) do
     quote do
       {
@@ -44,27 +44,30 @@ defmodule Skewheap do
   defmacrop right(node),   do: quote do: elem((unquote node), 2)
   defmacrop leaf?(node),   do: quote do: (unquote node) == :leaf
 
-  @spec merge_nodes(skewnode, skewnode) :: skewnode
-  defp merge_nodes(:leaf, :leaf), do: :leaf
-  defp merge_nodes(:leaf, b),     do: b
-  defp merge_nodes(a, :leaf),     do: a
-  defp merge_nodes(a, b) do
-    if Skewheap.Priority.has_priority(payload(a), payload(b)) do
-      skewnode(payload(a), merge_nodes(b, right(a)), left(a))
+  @spec merge_nodes(t, skewnode, skewnode) :: skewnode
+  defp merge_nodes(_, :leaf, :leaf), do: :leaf
+  defp merge_nodes(_, :leaf, b),     do: b
+  defp merge_nodes(_, a, :leaf),     do: a
+  defp merge_nodes(skew, a, b) do
+    if skew.sorter.(payload(b), payload(a)) do
+      merge_nodes skew, b, a
     else
-      merge_nodes(b, a)
+      skewnode payload(a), merge_nodes(skew, b, right(a)), left(a)
     end
   end
 
   #-----------------------------------------------------------------------------
   # Skewheap type implementation
   #-----------------------------------------------------------------------------
-  defstruct size: 0, root: :leaf
+  defstruct size: 0, root: :leaf, sorter: &<=/2
 
   @type t :: %__MODULE__{
-    size: non_neg_integer(),
-    root: skewnode,
+    size:   non_neg_integer(),
+    root:   skewnode,
+    sorter: sorter,
   }
+
+  @typep sorter :: (any(), any() -> boolean())
 
   #-----------------------------------------------------------------------------
   # Skewheap API
@@ -94,8 +97,8 @@ defmodule Skewheap do
       iex> Skewheap.new() |> Skewheap.empty?()
       true
   """
-  @spec new() :: t
-  def new(), do: %Skewheap{}
+  @spec new(sorter) :: t
+  def new(sorter \\ &<=/2), do: %Skewheap{sorter: sorter}
 
 
   @doc """
@@ -143,8 +146,9 @@ defmodule Skewheap do
   @spec put(t, any()) :: t
   def put(skew, payload) do
     %Skewheap{
-      size: skew.size + 1,
-      root: merge_nodes(skew.root, skewnode(payload)),
+      size:   skew.size + 1,
+      root:   merge_nodes(skew, skew.root, skewnode(payload)),
+      sorter: skew.sorter
     }
   end
 
@@ -181,8 +185,9 @@ defmodule Skewheap do
   def take(skew) do
     {
       %Skewheap{
-        size: skew.size - 1,
-        root: merge_nodes(left(skew.root), right(skew.root)),
+        size:   skew.size - 1,
+        root:   merge_nodes(skew, left(skew.root), right(skew.root)),
+        sorter: skew.sorter,
       },
       payload(skew.root),
     }
@@ -247,8 +252,9 @@ defmodule Skewheap do
   @spec merge(t, t) :: t
   def merge(a, b) do
     %Skewheap{
-      size: a.size + b.size,
-      root: merge_nodes(a.root, b.root),
+      size:   a.size + b.size,
+      root:   merge_nodes(a, a.root, b.root),
+      sorter: a.sorter,
     }
   end
 end
