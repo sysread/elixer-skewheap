@@ -1,3 +1,6 @@
+0.5.0   2022-05-17
+  -backwards incompatible change: sorting is now implemented using the Priority protocol
+
 0.4.1   2022-05-16
   -minor updates to make the documentation clearer, especially doctests
   -minor fixups and to make more readable and idiomatic

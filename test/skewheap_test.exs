@@ -43,10 +43,4 @@ defmodule SkewheapTest do
     assert Skewheap.empty?(c)
     assert items == Enum.to_list(1..10)
   end
-
-  test "custom sort" do
-    s = 1..4 |> Enum.shuffle() |> Enum.into(Skewheap.new(&>=/2))
-    {_, items} = Skewheap.drain(s)
-    assert items == [4,3,2,1]
-  end
 end
