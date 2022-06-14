@@ -1,4 +1,4 @@
-0.5     2022-06-14
+0.5.0   2022-06-14
   -implement Enumerable for Skewheap
 
 0.4.1   2022-05-16
