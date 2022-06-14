@@ -18,7 +18,7 @@ See [Skew_heap](https://en.wikipedia.org/wiki/Skew_heap) on Wikipedia.
 1. Add [skewheap](https://hex.pm/packages/skewheap) to your project's dependencies
 ```elixir
 def deps do
-  [{:skewheap, "~> 0.4.1"}]
+  [{:skewheap, "~> 0.5"}]
 end
 ```
 2. Install
