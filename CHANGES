@@ -1,3 +1,6 @@
+0.5     2022-06-14
+  -implement Enumerable for Skewheap
+
 0.4.1   2022-05-16
   -minor updates to make the documentation clearer, especially doctests
   -minor fixups and to make more readable and idiomatic

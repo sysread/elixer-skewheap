@@ -56,6 +56,20 @@ defmodule Skewheap do
     end
   end
 
+  @spec find(sorter, skewnode, any()) :: boolean()
+  defp find(_, :leaf, _), do: false
+  defp find(_, {element, _, _}, element), do: true
+  defp find(sorter, {_, left, right}, element) do
+    keep_left = !leaf?(left) && sorter.(payload(left), element)
+    keep_right = !leaf?(right) && sorter.(payload(right), element)
+    case {keep_left, keep_right} do
+      {true,  true}   -> find(sorter, left, element) || find(sorter, right, element)
+      {true,  false}  -> find(sorter, left, element)
+      {false, true}   -> find(sorter, right, element)
+      {false, false}  -> false
+    end
+  end
+
   #-----------------------------------------------------------------------------
   # Skewheap type implementation
   #-----------------------------------------------------------------------------
@@ -257,4 +271,25 @@ defmodule Skewheap do
       sorter: a.sorter,
     }
   end
+
+
+  @doc """
+  Returns true if `element` is present in the skewheap. Note that this requires
+  a depth first search of the binary heap structure.
+
+  ## Examples
+
+      iex> s = 1..10 |> Enum.shuffle() |> Enum.into(Skewheap.new())
+      ...> Skewheap.member?(s, 5)
+      true
+
+      iex> s = 1..10 |> Enum.shuffle() |> Enum.into(Skewheap.new())
+      ...> Skewheap.member?(s, 15)
+      false
+
+      iex> Skewheap.member?(Skewheap.new(), 42)
+      false
+  """
+  @spec member?(t, any()) :: boolean()
+  def member?(skew, element), do: find(skew.sorter, skew.root, element)
 end
