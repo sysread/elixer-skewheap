@@ -23,6 +23,14 @@ defmodule Skewheap do
       ...> items
       [1, 2, 3, 4, 5, 6]
 
+  ## Protocols
+
+  By default, the following protocols are implemented for `Skewheap`.
+
+    * `Collectable`
+    * `Enumerable`
+    * `Inspect`
+
   """
   #-----------------------------------------------------------------------------
   # Node type
