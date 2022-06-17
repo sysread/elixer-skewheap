@@ -4,7 +4,7 @@ defimpl Enumerable, for: Skewheap do
   """
 
   @doc """
-  Returns the number of elements in the heap. 
+  Returns the number of elements in the heap.
 
   ## Examples
 
